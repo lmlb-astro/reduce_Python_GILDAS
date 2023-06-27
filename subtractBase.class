@@ -1,0 +1,45 @@
+! subtract base line for all
+! and resamples before storing in new file
+
+file in &1
+!file in FTSOdp20150211
+!file in 20150518
+fin /all
+set source DR21OTF
+fin /all
+!set line HCN_LSB
+set line N2H+_C18O
+fin /all
+set tel &2
+!set tel 30ME0VLO-F05
+!set tel 30ME0HLO-F07
+fin /all
+
+define real f1
+!let f1 85926.270  !nh2d
+let f1 &4
+
+file out &3 s /overwrite
+!file out basenh2d1105.30m s /overwrite
+!file out base43pos1XF02lowVelRes.30m s
+
+for i 1 to found
+  if (i.eq.1) then
+    get first
+  else
+    get next
+  endif
+  set unit f v
+  set mode x f1+40 f1-40 
+  modify frequency f1
+
+  set ang sec
+  set unit v f
+  !set mode x -15 15
+  set window -10 10
+
+  base 3 /pl
+  resample 200 100 0 0.2 velocity /nofft
+  !resample 300 150 0 0.1 velocity /nofft
+  write
+next i
