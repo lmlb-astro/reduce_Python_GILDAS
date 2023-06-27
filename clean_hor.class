@@ -1,0 +1,126 @@
+!syntax   @ clean 38909 7.5 7.5 basenh2d1105
+! 19 is the scan number
+! 5 5 are x and y spacings in arcsec
+!
+!The file result.30m  has to be existent
+!
+!file out result.30m s
+
+
+
+define real tmp xmin xmax ymin ymax aver_y offx offy xspa yspa
+define real df ff diff_f chan
+define integer npoint nline length ijump1 ijump2 ii jj ntmp
+
+
+
+!file in base43july9pos1XF02mod.30m
+file in &4
+
+fin /all
+
+
+set scan &1 &1  ! is user input? : COULD USE THIS FOR FITTING THEN
+let xspa = &2
+let yspa = &3
+set ang sec
+set range * * * *! keeps everything
+
+let ymin = 1e6
+let ymax = -1e6
+fin /all
+FOR I 1 TO FOUND
+  if (i.eq.1) then
+    get first
+  else
+    get next
+  endif 
+  if (off_beta.lt.ymin) then
+    let ymin = off_beta
+  endif
+  if (off_beta.gt.ymax) then
+    let ymax = off_beta
+  endif
+NEXT I
+exa ymin
+exa ymax
+let nline = int((ymax-ymin)|yspa)+1
+exa nline
+
+let offy = ymin-yspa  ! so can always do offy = offy+yspa
+!let offy = -90
+!----------------------------loop on lines-------
+FOR J 1 TO nline
+
+  let offy = offy+yspa
+  exa offy
+  
+  set range * * offy offy ! find select all observations in specified range
+  !sys "rm totoHor.30m"
+  file out totoHor.30m s /overwrite
+  
+  fin /all  ! DO LIST HERE TO WHAT IS FOUND
+  let tmp = 0.
+  let ntmp = 0
+  FOR I 1 TO FOUND
+    if (i.eq.1) then
+      get first
+    else
+      get next
+    endif 
+    let tmp = tmp+off_beta
+    let ntmp = ntmp+1
+  NEXT I
+  let aver_y = tmp/ntmp  ! this block determined the average y value
+  
+  FOR I 1 TO FOUND
+    if (i.eq.1) then
+      get first
+    else
+      get next
+    endif 
+    let tmp = int(off_lambda|xspa)*xspa
+!   modify offset tmp off_beta
+    modify offset tmp aver_y   ! changes the offsets (x and y)
+    write
+  NEXT I  ! write changed offsets
+
+  file in totoHor.30m
+
+  let xmin = 1e6
+  let xmax = -1e6
+  fin /all
+  FOR I 1 TO FOUND
+    if (i.eq.1) then
+      get first
+    else
+      get next
+    endif 
+    if (off_lambda.lt.xmin) then
+      let xmin = off_lambda
+    endif
+    if (off_lambda.gt.xmax) then
+      let xmax = off_lambda
+    endif
+  NEXT I
+  exa xmin
+  exa xmax
+  let npoint = int((xmax-xmin)|xspa)+1
+  exa npoint
+
+  file out resultTest.30m
+  
+  let offx = xmin-xspa
+  !set wei equal  ! sets equal weight for averaging
+  FOR I 1 TO NPOINT
+    let offx = offx+xspa
+    find /offset offx off_beta /all
+    !find /offset offx aver_y /all
+    if (found.ge.1) then
+      aver /weight sigma
+      write
+    endif ! get what the entire program does: so why sometimes bizarre offsets?
+  NEXT I
+
+  file in &4
+NEXT J

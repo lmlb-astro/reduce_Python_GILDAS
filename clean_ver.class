@@ -1,0 +1,130 @@
+!syntax   @ clean 38910 7.5 7.5
+! 19 is the scan number
+! 5 5 are x and y spacings in arcsec
+!
+!The file result.30m  has to be existent
+!
+!file out result.30m s
+
+!file in base43july9pos1XF02mod.30m
+file in &4
+
+
+define real tmp xmin xmax ymin ymax aver_x offx offy xspa yspa
+define integer npoint nline ntmp
+
+set scan &1 &1
+let xspa = &2
+let yspa = &3
+set ang sec
+set range
+
+let xmin = 1e6
+let xmax = -1e6
+fin /all
+FOR I 1 TO FOUND
+  get next
+  if (off_lambda.lt.xmin) then
+    let xmin = off_lambda
+  endif
+  if (off_lambda.gt.xmax) then
+    let xmax = off_lambda
+  endif
+NEXT I
+exa xmin
+exa xmax
+let nline = int((xmax-xmin)|xspa)+1
+exa nline
+
+!pause
+
+let offx = xmin-xspa
+!----------------------------loop on lines-------
+FOR J 1 TO nline
+let offx = offx+xspa
+exa offx
+
+set range offx offx * *
+!sys "rm totoVer.30m"
+file out totoVer.30m s /overwrite
+
+fin /all
+let tmp = 0.
+let ntmp = 0
+FOR I 1 TO FOUND
+  if (i.eq.1) then
+    get first
+  else
+    get next
+  endif 
+  let tmp = tmp+off_lambda
+  let ntmp = ntmp+1
+NEXT I
+let aver_x = tmp/ntmp
+FOR I 1 TO FOUND
+  if (i.eq.1) then
+    get first
+  else
+    get next
+  endif 
+  let tmp = int(off_beta|yspa)*yspa
+!  modify offset off_lambda tmp
+  modify offset aver_x tmp
+  write
+NEXT I
+
+file in totoVer.30m
+
+let ymin = 1e6
+let ymax = -1e6
+fin /all
+FOR I 1 TO FOUND
+  get next
+  if (off_beta.lt.ymin) then
+    let ymin = off_beta
+  endif
+  if (off_beta.gt.ymax) then
+    let ymax = off_beta
+  endif
+NEXT I
+exa ymin
+exa ymax
+let npoint = int((ymax-ymin)|yspa)+1
+exa npoint
+
+file out resultTest.30m
+
+let offy = ymin-yspa
+!set wei equal
+FOR I 1 TO NPOINT
+  let offy = offy+yspa
+!  find /offset off_lambda offy /all
+  find /offset aver_x offy /all
+  if (found.ge.1) then
+   aver /weight sigma
+   write
+  endif
+NEXT I
+!E-0100.C-0825A.2017OCT05:
+!	E-0100.C-0825A-2017-2017-07-09.apex
+!	E-0100.C-0825A-2017-2017-07-14.apex
+!	E-0100.C-0825A-2017-2017-07-16.apex
+!	E-0100.C-0825A-2017.html
+!	ObsLogs:
+!		APECS-E-0100.C-0825A-2017-2017-07-09.html
+!		APECS-E-0100.C-0825A-2017-2017-07-09.obslog
+!		APECS-E-0100.C-0825A-2017-2017-07-14.html
+!		APECS-E-0100.C-0825A-2017-2017-07-14.obslog
+!		APECS-E-0100.C-0825A-2017-2017-07-16.html
+!		APECS-E-0100.C-0825A-2017-2017-07-16.obslog
+!	Reduction:
+!		clean_hor.class
+!		clean_ver.class
+!		jul09.30m
+!		result.30m
+!		titi.30m
+!		toto.30m
+
+!file in base43july9pos1XF02mod.30m
+file in &4
+NEXT J

@@ -1,0 +1,30 @@
+cl p
+cl a 
+set def
+pen /col 0 /weight 1 /dashed 1 
+define real f1 /global
+
+let f1 88631.602
+
+
+file in FTSOdp20150211
+fin /all
+set source DR21OTF
+fin /all
+
+get f
+
+set unit f v
+set mode x f1+50 f1-50 
+modify frequency f1
+set unit v f
+pl
+pause
+
+get 3000
+
+set unit f v
+set mode x f1+50 f1-50 
+modify frequency f1
+set unit v f
+pl

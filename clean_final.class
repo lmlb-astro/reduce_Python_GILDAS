@@ -1,0 +1,38 @@
+! to put all data together
+
+define real xmin xmax xspa ymin ymax yspa yjump xjump
+
+let xmin = -450
+let xmax = 230
+let ymin  = -650
+let ymax = 540
+!let xmin = -460
+!let xmax = 250
+!let ymin  = -460
+!let ymax = 540
+let xspa = 5
+let yspa = 5
+
+let xjump = 2*xspa
+let yjump = 2*yspa
+
+set scan * *
+set range * * * *
+set match 1
+set wei equal
+
+file in resultTest
+fin /all
+file out &1 s /overwrite
+
+for i xmin to xmax by xjump
+  for j ymin to ymax by yjump
+    find /offset i j /all
+    list
+    !find /range i-5 i+5 j-5 i+5 /all
+    if (found.ge.1) then
+      aver /nocheck
+      write
+    endif
+  next j
+next i
